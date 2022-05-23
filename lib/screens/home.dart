@@ -11,11 +11,10 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Error!")),
-      body: const SingleChildScrollView(
-          child: Center(
-        child: Text("Error!"),
-      )),
+      appBar: AppBar(
+        title: const Text("Easy Management"),
+        centerTitle: true,
+      ),
     );
   }
 }
