@@ -1,8 +1,5 @@
-import 'package:easy_debounce/easy_debounce.dart';
+import 'package:easy_management/route/route.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-
-import 'screens/login.dart';
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +12,7 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Map<int, Color> colorSwatch = {
+    Map<int, Color> colorSwatch = const {
       50: Color.fromRGBO(86, 149, 44, .1),
       100: Color.fromRGBO(86, 149, 44, .2),
       200: Color.fromRGBO(86, 149, 44, .3),
@@ -31,12 +28,12 @@ class MyApp extends StatelessWidget {
     MaterialColor primaryAppColor = MaterialColor(0xFF56952C, colorSwatch);
 
     return MaterialApp(
-        title: _title,
-        theme: ThemeData(
-          primarySwatch: primaryAppColor,
-        ),
-        home: Scaffold(
-          body: const LoginScreen(),
-        ));
+      title: _title,
+      theme: ThemeData(
+        primarySwatch: primaryAppColor,
+      ),
+      initialRoute: '/login',
+      onGenerateRoute: RoutesConroller.generateRoute,
+    );
   }
 }

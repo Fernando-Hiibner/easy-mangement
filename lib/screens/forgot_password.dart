@@ -3,23 +3,28 @@ import 'package:flutter/material.dart';
 
 import 'package:easy_management/style/colors.dart';
 
-class LoginScreen extends StatefulWidget {
-  const LoginScreen({Key? key}) : super(key: key);
+class ForgotPasswordScreen extends StatefulWidget {
+  const ForgotPasswordScreen({Key? key}) : super(key: key);
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  _ForgotPasswordScreenState createState() => _ForgotPasswordScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _userController = TextEditingController();
+class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
+  final TextEditingController _verificationCodeControlelr =
+      TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool passwordVisibility = false;
+  bool confirmPasswordVisibility = false;
 
   @override
   void dispose() {
-    _userController.dispose();
+    _verificationCodeControlelr.dispose();
     _passwordController.dispose();
+    _confirmPasswordController.dispose();
     super.dispose();
   }
 
@@ -55,6 +60,53 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: const [
+                  LimitedBox(
+                    maxWidth: 364,
+                    child: Text(
+                        'Um email foi enviado para us**@****.*** com o código de verificação',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontFamily: "Montserrat",
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                        )),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  LimitedBox(
+                    maxWidth: 364,
+                    child: Text.rich(
+                      TextSpan(children: <TextSpan>[
+                        TextSpan(
+                            text: "Re-enviar código",
+                            style: TextStyle(
+                              color: colorPallet["Primaria-1"],
+                              fontFamily: "Montserrat",
+                              fontSize: 12,
+                              fontWeight: FontWeight.w800,
+                            ),
+                            recognizer: TapGestureRecognizer()
+                              ..onTap = () => print("Re-enviar código")),
+                      ]),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 15),
               child: Row(
                 mainAxisSize: MainAxisSize.max,
@@ -64,10 +116,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       padding:
                           const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                       child: TextFormField(
-                        controller: _userController,
+                        controller: _verificationCodeControlelr,
                         obscureText: false,
                         decoration: InputDecoration(
-                            labelText: "Usuário",
+                            labelText: "Código de Verificação",
                             enabledBorder: const UnderlineInputBorder(
                                 borderSide:
                                     BorderSide(color: Colors.black, width: 1),
@@ -137,6 +189,55 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
             Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 15),
+              child: Row(
+                mainAxisSize: MainAxisSize.max,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding:
+                          const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
+                      child: TextFormField(
+                        controller: _confirmPasswordController,
+                        obscureText: !confirmPasswordVisibility,
+                        decoration: InputDecoration(
+                          labelText: "Confirmar Senha",
+                          enabledBorder: const UnderlineInputBorder(
+                              borderSide:
+                                  BorderSide(color: Colors.black, width: 1),
+                              borderRadius: BorderRadius.only(
+                                  topLeft: Radius.circular(4.0),
+                                  topRight: Radius.circular(4.0))),
+                          focusedBorder: UnderlineInputBorder(
+                              borderSide: BorderSide(
+                                  color:
+                                      colorPallet["Primaria"] ?? Colors.black,
+                                  width: 1),
+                              borderRadius: const BorderRadius.only(
+                                  topLeft: Radius.circular(4.0),
+                                  topRight: Radius.circular(4.0))),
+                          suffixIcon: InkWell(
+                            onTap: () => setState(
+                              () => confirmPasswordVisibility =
+                                  !confirmPasswordVisibility,
+                            ),
+                            child: Icon(
+                              confirmPasswordVisibility
+                                  ? Icons.visibility_outlined
+                                  : Icons.visibility_off_outlined,
+                              color: const Color(0xFF757575),
+                              size: 22,
+                            ),
+                          ),
+                        ),
+                        keyboardType: TextInputType.visiblePassword,
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            ),
+            Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 30),
               child: Row(
                 mainAxisSize: MainAxisSize.max,
@@ -146,9 +247,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed('/home');
+                        Navigator.of(context).pushNamed('/confirmAccount');
                       },
-                      child: const Text("Entrar"),
+                      child: const Text("Enviar"),
                       style: ElevatedButton.styleFrom(
                         primary: colorPallet["Primaria"],
                         textStyle: TextStyle(
@@ -161,83 +262,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                       ),
                     ),
-                  )),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LimitedBox(
-                    maxWidth: 364,
-                    child: Text.rich(
-                      TextSpan(children: <TextSpan>[
-                        TextSpan(
-                            text: "Esqueceu sua senha?",
-                            style: TextStyle(
-                              color: colorPallet["Primaria-1"],
-                              fontFamily: "Montserrat",
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () => Navigator.of(context)
-                                  .pushNamed("/forgotPassword")),
-                      ]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Ou',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                          fontFamily: "Montserrat",
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                          color: colorPallet["Dark"])),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(0, 0, 0, 30),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Expanded(
-                      child: Padding(
-                    padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
-                    child: Padding(
-                        padding:
-                            const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
-                        child: ElevatedButton(
-                          onPressed: () {
-                            Navigator.of(context).pushNamed('/createAccount');
-                          },
-                          child: const Text("Criar nova Conta"),
-                          style: ElevatedButton.styleFrom(
-                            primary: colorPallet["Secundaria"],
-                            textStyle: TextStyle(
-                                fontFamily: "Montserrat",
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: colorPallet["Light-1"]),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(0),
-                            ),
-                          ),
-                        )),
                   )),
                 ],
               ),
