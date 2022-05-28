@@ -16,6 +16,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool passwordVisibility = false;
 
+  String? textValidator(String? value) {
+    return value == null || value.isEmpty
+        ? "Esse campo não pode estar vazio."
+        : null;
+  }
+
+  String validateForm() {
+    /**
+     * EU - > Erro Usuário
+     * EP - > Erro Senha
+     * S  - > Sucesso
+     */
+    final _userText = _userController.value.text;
+    final _passwordText = _passwordController.value.text;
+    if (_userText.isEmpty || _userText == null) {
+      return "EU";
+    } else if (_passwordText.isEmpty || _passwordText == null) {
+      return "EP";
+    }
+    return "S";
+  }
+
   @override
   void dispose() {
     _userController.dispose();
@@ -66,6 +88,8 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: TextFormField(
                         controller: _userController,
                         obscureText: false,
+                        validator: (value) => textValidator(value),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                             labelText: "Usuário",
                             enabledBorder: const UnderlineInputBorder(
@@ -99,6 +123,8 @@ class _LoginScreenState extends State<LoginScreen> {
                           const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                       child: TextFormField(
                         controller: _passwordController,
+                        validator: (value) => textValidator(value),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         obscureText: !passwordVisibility,
                         decoration: InputDecoration(
                           labelText: "Senha",
@@ -146,7 +172,24 @@ class _LoginScreenState extends State<LoginScreen> {
                     padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                     child: ElevatedButton(
                       onPressed: () {
-                        Navigator.of(context).pushNamed('/home');
+                        String validacao = validateForm();
+                        if (validacao == "S") {
+                          Navigator.of(context).pushNamed('/home');
+                        } else if (validacao == "EU") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Usuário Inválido!'),
+                              backgroundColor: Color(0xFFD01F1F),
+                            ),
+                          );
+                        } else if (validacao == "EP") {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Senha Inválida!'),
+                              backgroundColor: Color(0xFFD01F1F),
+                            ),
+                          );
+                        }
                       },
                       child: const Text("Entrar"),
                       style: ElevatedButton.styleFrom(

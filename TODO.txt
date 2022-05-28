@@ -1,2 +1,3 @@
 TODO No botão de entrar na tela de login, checar se a conta é verificada antes de entrar, se não for manda pra confirmação.
 TODO Fazer o email da tela de confirmar conta passar por data ou algo do genero.
+TODO Corrigir essas limited box, no Asus Zenfone 5Z fica certo os textos, no Galaxy S20FE ele ja corta
