@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:easy_management/style/colors.dart';
+import 'package:easy_management/database/sqlite.dart';
+import 'package:easy_management/utils.dart';
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({Key? key}) : super(key: key);
@@ -17,6 +19,42 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
 
   bool passwordVisibility = false;
   bool confirmPasswordVisibility = false;
+
+  final SQLiteHelper _databaseHelper = SQLiteHelper.instance;
+
+  String validateForm() {
+    /**
+     * EU  - > Erro Usuário
+     * EP  - > Erro Senha
+     * ECP - > Erro Confirmar Senha
+     * EPD - > Erro senhas diferentes
+     * S   - > Sucesso
+     */
+    final _userText = _userController.value.text;
+    final _passwordText = _passwordController.value.text;
+    final _confirmPasswordText = _confirmPasswordController.value.text;
+    if (_userText.isEmpty || _userText == null) {
+      return "EU";
+    } else if (_passwordText.isEmpty || _passwordText == null) {
+      return "EP";
+    } else if (_confirmPasswordText.isEmpty || _confirmPasswordText == null) {
+      return "ECP";
+    } else if (_passwordText != _confirmPasswordText) {
+      return "EPD";
+    }
+    return "S";
+  }
+
+  Future<String> insertUser() async {
+    try {
+      final _userText = _userController.value.text;
+      final _passwordText = _passwordController.value.text;
+
+      return await _databaseHelper.insertUser(_userText, _passwordText);
+    } on Exception {
+      return "E";
+    }
+  }
 
   @override
   void dispose() {
@@ -85,6 +123,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       child: TextFormField(
                         controller: _userController,
                         obscureText: false,
+                        validator: (value) => EMUtils.textValidator(value),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                             labelText: "Usuário",
                             enabledBorder: const UnderlineInputBorder(
@@ -119,6 +159,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       child: TextFormField(
                         controller: _passwordController,
                         obscureText: !passwordVisibility,
+                        validator: (value) => EMUtils.textValidator(value),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                           labelText: "Senha",
                           enabledBorder: const UnderlineInputBorder(
@@ -167,6 +209,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       child: TextFormField(
                         controller: _confirmPasswordController,
                         obscureText: !confirmPasswordVisibility,
+                        validator: (value) => EMUtils.textValidator(value),
+                        autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                           labelText: "Confirmar Senha",
                           enabledBorder: const UnderlineInputBorder(
@@ -213,10 +257,40 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                       child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                     child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pushNamed('/confirmAccount');
+                      onPressed: () async {
+                        String validacao = validateForm();
+                        if (validacao == "S") {
+                          String insert = await insertUser();
+                          if (insert == "S") {
+                            Navigator.of(context).pushNamed('/home');
+                          } else if (insert == "UE") {
+                            EMUtils.mostrarSnackbar(
+                                context,
+                                'Usuário já cadastrado no sistema!',
+                                colorPallet["Warning"]);
+                          } else {
+                            EMUtils.mostrarSnackbar(
+                                context,
+                                'Erro ao cadastrar usuário',
+                                colorPallet["Danger"]);
+                          }
+                        } else if (validacao == "EU") {
+                          EMUtils.mostrarSnackbar(context, 'Usuário Inválido!',
+                              colorPallet["Danger"]);
+                        } else if (validacao == "EP") {
+                          EMUtils.mostrarSnackbar(context, 'Senha Inválido!',
+                              colorPallet["Danger"]);
+                        } else if (validacao == "ECP") {
+                          EMUtils.mostrarSnackbar(
+                              context,
+                              'Confirmar Senha Inválido!',
+                              colorPallet["Danger"]);
+                        } else if (validacao == "EPD") {
+                          EMUtils.mostrarSnackbar(context, 'Senhas diferentes!',
+                              colorPallet["Danger"]);
+                        }
                       },
-                      child: const Text("Entrar"),
+                      child: const Text("Enviar"),
                       style: ElevatedButton.styleFrom(
                         primary: colorPallet["Primaria"],
                         textStyle: TextStyle(

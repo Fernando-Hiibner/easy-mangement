@@ -2,6 +2,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 
 import 'package:easy_management/style/colors.dart';
+import 'package:easy_management/database/sqlite.dart';
+import 'package:easy_management/utils.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
@@ -14,13 +16,9 @@ class _LoginScreenState extends State<LoginScreen> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  bool passwordVisibility = false;
+  final SQLiteHelper _databaseHelper = SQLiteHelper.instance;
 
-  String? textValidator(String? value) {
-    return value == null || value.isEmpty
-        ? "Esse campo não pode estar vazio."
-        : null;
-  }
+  bool passwordVisibility = false;
 
   String validateForm() {
     /**
@@ -36,6 +34,17 @@ class _LoginScreenState extends State<LoginScreen> {
       return "EP";
     }
     return "S";
+  }
+
+  Future<bool> fazerLogin() async {
+    try {
+      final _user = _userController.value.text;
+      final _password = _passwordController.value.text;
+
+      return await _databaseHelper.loginUser(_user, _password);
+    } on Exception {
+      return false;
+    }
   }
 
   @override
@@ -88,7 +97,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: TextFormField(
                         controller: _userController,
                         obscureText: false,
-                        validator: (value) => textValidator(value),
+                        validator: (value) => EMUtils.textValidator(value),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         decoration: InputDecoration(
                             labelText: "Usuário",
@@ -123,7 +132,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                       child: TextFormField(
                         controller: _passwordController,
-                        validator: (value) => textValidator(value),
+                        validator: (value) => EMUtils.textValidator(value),
                         autovalidateMode: AutovalidateMode.onUserInteraction,
                         obscureText: !passwordVisibility,
                         decoration: InputDecoration(
@@ -171,24 +180,24 @@ class _LoginScreenState extends State<LoginScreen> {
                       child: Padding(
                     padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 0),
                     child: ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         String validacao = validateForm();
                         if (validacao == "S") {
-                          Navigator.of(context).pushNamed('/home');
+                          bool loginValido = await fazerLogin();
+                          if (loginValido) {
+                            Navigator.of(context).pushNamed('/home');
+                          } else {
+                            EMUtils.mostrarSnackbar(
+                                context,
+                                'Usuário/Senha incorretos!',
+                                colorPallet["Danger"]);
+                          }
                         } else if (validacao == "EU") {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Usuário Inválido!'),
-                              backgroundColor: Color(0xFFD01F1F),
-                            ),
-                          );
+                          EMUtils.mostrarSnackbar(context, 'Usuário Inválido!',
+                              colorPallet["Danger"]);
                         } else if (validacao == "EP") {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Senha Inválida!'),
-                              backgroundColor: Color(0xFFD01F1F),
-                            ),
-                          );
+                          EMUtils.mostrarSnackbar(context, 'Senha Inválido!',
+                              colorPallet["Danger"]);
                         }
                       },
                       child: const Text("Entrar"),
@@ -208,34 +217,36 @@ class _LoginScreenState extends State<LoginScreen> {
                 ],
               ),
             ),
-            Padding(
-              padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
-              child: Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  LimitedBox(
-                    maxWidth: 364,
-                    child: Text.rich(
-                      TextSpan(children: <TextSpan>[
-                        TextSpan(
-                            text: "Esqueceu sua senha?",
-                            style: TextStyle(
-                              color: colorPallet["Primaria-1"],
-                              fontFamily: "Montserrat",
-                              fontSize: 14,
-                              fontWeight: FontWeight.w800,
-                            ),
-                            recognizer: TapGestureRecognizer()
-                              ..onTap = () => Navigator.of(context)
-                                  .pushNamed("/forgotPassword")),
-                      ]),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // Como o sistema de Email foi de saboia por hora, eu desativei também a troca de senha
+            // Ela é dependente do código de verificação que ia ser enviado por email
+            // Padding(
+            //   padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
+            //   child: Row(
+            //     mainAxisSize: MainAxisSize.max,
+            //     mainAxisAlignment: MainAxisAlignment.center,
+            //     children: [
+            //       LimitedBox(
+            //         maxWidth: 364,
+            //         child: Text.rich(
+            //           TextSpan(children: <TextSpan>[
+            //             TextSpan(
+            //                 text: "Esqueceu sua senha?",
+            //                 style: TextStyle(
+            //                   color: colorPallet["Primaria-1"],
+            //                   fontFamily: "Montserrat",
+            //                   fontSize: 14,
+            //                   fontWeight: FontWeight.w800,
+            //                 ),
+            //                 recognizer: TapGestureRecognizer()
+            //                   ..onTap = () => Navigator.of(context)
+            //                       .pushNamed("/forgotPassword")),
+            //           ]),
+            //           textAlign: TextAlign.center,
+            //         ),
+            //       ),
+            //     ],
+            //   ),
+            // ),
             Padding(
               padding: const EdgeInsetsDirectional.fromSTEB(32, 0, 32, 16),
               child: Row(
