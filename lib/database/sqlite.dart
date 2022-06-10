@@ -172,7 +172,8 @@ class SQLiteHelper {
 
   Future<List<ExpensesModel>> getExpenses(String email) async {
     Database db = await instance.database;
-    var expenses = await db.query('TbExpenses', orderBy: 'date');
+    var expenses =
+        await db.rawQuery('SELECT * FROM TbExpenses ORDER BY date DESC');
     List<ExpensesModel> expensesList = expenses.isNotEmpty
         ? expenses.map((c) => ExpensesModel.fromMap(c)).toList()
         : [];
@@ -189,7 +190,7 @@ class SQLiteHelper {
 
       await db.rawQuery(
           'INSERT INTO TbExpenses (userId, period, date, value) VALUES (?, ?, ?, ?)',
-          [user.first.id, period, date, value]);
+          [user.first.id, period, date.toIso8601String(), value]);
       return true;
     } catch (e) {
       return false;

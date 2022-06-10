@@ -17,8 +17,8 @@ class ExpensesModel {
       id: json['id'],
       userId: json['userId'],
       period: json['period'],
-      date: json['date'],
-      value: json['value']);
+      date: DateTime.parse(json['date']),
+      value: double.parse(json['value'].toString()));
 
   Map<String, dynamic> toMap() {
     return {

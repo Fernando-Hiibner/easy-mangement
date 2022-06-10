@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_speed_dial/flutter_speed_dial.dart';
 import 'package:easy_management/database/sqlite.dart';
 
+import '../model/expenses_model.dart';
 import '../model/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -26,7 +27,10 @@ class _HomeScreenState extends State<HomeScreen> {
       verificationCode: "",
       verified: true);
 
-  final List<bool> _expansionPanelOpen = [false, false];
+  List<bool> _expansionPanelOpen = [];
+  List<ExpansionPanel> _expansionPanels = [];
+  List<List<Widget>> _expansionPanelsChild = [];
+  Future<List<ExpensesModel>> _expenses = SQLiteHelper.instance.getExpenses("");
 
   DateTime _date = DateTime.now();
 
@@ -44,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
       } else {
         setState(() {
           currentUser = value.first;
+          _expenses = _databaseHelper.getExpenses(currentUser.email);
         });
       }
     });
@@ -87,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
               children: <Widget>[
                 TextFormField(
                   keyboardType: TextInputType.number,
+                  controller: _newExpenseValueController,
                   validator: (value) => EMUtils.textValidator(value),
                   autovalidateMode: AutovalidateMode.onUserInteraction,
                   autofocus: true,
@@ -138,7 +144,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
             actions: [
-              TextButton(onPressed: () {}, child: const Text("Adicionar"))
+              TextButton(
+                  onPressed: () => submitInsertExpense(context),
+                  child: const Text("Adicionar"))
             ],
           ));
 
@@ -160,7 +168,9 @@ class _HomeScreenState extends State<HomeScreen> {
           .insertExpenses(currentUser.email, newExpenseValue, _date)
           .then((value) {
         if (value) {
-          // TODO Set State da fonte de dados da lista de Expansion sla o que
+          setState(() {
+            _expenses = SQLiteHelper.instance.getExpenses(currentUser.email);
+          });
           Navigator.of(context).pop();
           EMUtils.mostrarSnackbar(
               context, "Gasto inserido com sucesso!", colorPallet["Success"]);
@@ -242,6 +252,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 maxlimit: newLimit,
                 verificationCode: currentUser.verificationCode,
                 verified: currentUser.verified);
+            _expenses = SQLiteHelper.instance.getExpenses(currentUser.email);
           });
           Navigator.of(context).pop();
           EMUtils.mostrarSnackbar(
@@ -263,6 +274,33 @@ class _HomeScreenState extends State<HomeScreen> {
       _newLimitTextController.clear();
       return;
     }
+  }
+
+  Container buildExpenseContainer(expense) {
+    return Container(
+        decoration: const BoxDecoration(
+            border: Border(bottom: BorderSide(color: Color(0xFFCCCCCC)))),
+        child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  EMUtils.formatarData(expense.date),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                Text(
+                  expense.value.toStringAsFixed(2),
+                  style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: expense.value > currentUser.maxlimit
+                          ? colorPallet["Danger"]
+                          : colorPallet["Success"]),
+                )
+              ],
+            )));
   }
 
   @override
@@ -299,24 +337,92 @@ class _HomeScreenState extends State<HomeScreen> {
                           ]))),
               Padding(
                   padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 16, 8),
-                  child: ExpansionPanelList(
-                    children: [
-                      ExpansionPanel(
-                          headerBuilder: (context, isOpen) {
-                            return const Text("Expansion");
-                          },
-                          body: const Text("Baozi"),
-                          isExpanded: _expansionPanelOpen[0]),
-                      ExpansionPanel(
-                          headerBuilder: (context, isOpen) {
-                            return const Text("Expansion 2");
-                          },
-                          body: const Text("Teste"),
-                          isExpanded: _expansionPanelOpen[1])
-                    ],
-                    expansionCallback: (i, isOpen) => setState(() {
-                      _expansionPanelOpen[i] = !isOpen;
-                    }),
+                  child: FutureBuilder<List<ExpensesModel>>(
+                    future: _expenses,
+                    builder: (BuildContext context,
+                        AsyncSnapshot<List<ExpensesModel>> snapshot) {
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return const Center(
+                          child: Text("Carregando..."),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Center(
+                          child: Column(children: [
+                            const Text("Erro ao carregar dados"),
+                            TextButton(
+                                onPressed: () {
+                                  setState(() {
+                                    _expenses = SQLiteHelper.instance
+                                        .getExpenses(currentUser.email);
+                                  });
+                                },
+                                child: Text(
+                                  "Clique para tentar novamente!",
+                                  style:
+                                      TextStyle(color: colorPallet["Primaria"]),
+                                ))
+                          ]),
+                        );
+                      } else if (!snapshot.hasData) {
+                        return const Center(
+                          child: Text("Carregando..."),
+                        );
+                      } else if (snapshot.data!.isEmpty) {
+                        const Center(
+                          child: Text("Sem gastos"),
+                        );
+                      }
+
+                      _expansionPanels.clear();
+                      _expansionPanelOpen.clear();
+                      _expansionPanelsChild.clear();
+                      List<String> periodos = [];
+                      for (var i = 0; i < snapshot.data!.length; i++) {
+                        var expense = snapshot.data![i];
+                        if (!periodos.contains(expense.period)) {
+                          periodos.add(expense.period);
+                          _expansionPanelOpen.add(true);
+                          _expansionPanelsChild.add([]);
+                          _expansionPanelsChild.last
+                              .add(buildExpenseContainer(expense));
+                          _expansionPanels.add(
+                            ExpansionPanel(
+                                canTapOnHeader: true,
+                                headerBuilder: (context, isOpen) {
+                                  return Container(
+                                      child: Padding(
+                                          padding: const EdgeInsetsDirectional
+                                              .fromSTEB(8, 8, 8, 8),
+                                          child: Text(
+                                            expense.period,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16),
+                                          )));
+                                },
+                                body: Column(children: [
+                                  ListView(
+                                    shrinkWrap: true,
+                                    children: _expansionPanelsChild[
+                                        _expansionPanelsChild.length - 1],
+                                  )
+                                ]),
+                                isExpanded: _expansionPanelOpen[
+                                    _expansionPanelOpen.length - 1]),
+                          );
+                        }
+
+                        _expansionPanelsChild.last
+                            .add(buildExpenseContainer(expense));
+                      }
+
+                      return ExpansionPanelList(
+                        children: _expansionPanels,
+                        expansionCallback: (i, isOpen) => setState(() {
+                          _expansionPanelOpen[i] = !isOpen;
+                        }),
+                      );
+                    },
                   ))
             ])),
         floatingActionButton: buildSpeedDial());
