@@ -160,14 +160,39 @@ class SQLiteHelper {
   }
 
   Future<bool> updateMaxlimit(String email, double newLimit) async {
-    return true;
+    Database db = await instance.database;
+    try {
+      await db.rawQuery(
+          'UPDATE TbUsers SET maxlimit=? WHERE email=?', [newLimit, email]);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 
   Future<List<ExpensesModel>> getExpenses(String email) async {
-    return [];
+    Database db = await instance.database;
+    var expenses = await db.query('TbExpenses', orderBy: 'date');
+    List<ExpensesModel> expensesList = expenses.isNotEmpty
+        ? expenses.map((c) => ExpensesModel.fromMap(c)).toList()
+        : [];
+    return expensesList;
   }
 
   Future<bool> insertExpenses(String email, double value, DateTime date) async {
-    return true;
+    Database db = await instance.database;
+    try {
+      String period = date.month.toString() + "/" + date.year.toString();
+      var user = await getUserByEmail(email);
+
+      if (user.isEmpty) return false;
+
+      await db.rawQuery(
+          'INSERT INTO TbExpenses (userId, period, date, value) VALUES (?, ?, ?, ?)',
+          [user.first.id, period, date, value]);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }
