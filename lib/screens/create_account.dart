@@ -262,7 +262,8 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                         if (validacao == "S") {
                           String insert = await insertUser();
                           if (insert == "S") {
-                            Navigator.of(context).pushNamed('/home');
+                            Navigator.of(context).pushNamed('/home',
+                                arguments: _userController.text);
                           } else if (insert == "UE") {
                             EMUtils.mostrarSnackbar(
                                 context,

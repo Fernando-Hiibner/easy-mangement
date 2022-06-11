@@ -8,7 +8,8 @@ import '../model/expenses_model.dart';
 import '../model/user_model.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final String data;
+  const HomeScreen({Key? key, required this.data}) : super(key: key);
 
   @override
   _HomeScreenState createState() => _HomeScreenState();
@@ -28,9 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
       verified: true);
 
   List<bool> _expansionPanelOpen = [];
+  Map<String, bool> _periodExpansionOpen = {};
+  Map<int, String> _periodExpansionOpenCurrent = {};
   List<ExpansionPanel> _expansionPanels = [];
   List<List<Widget>> _expansionPanelsChild = [];
-  Future<List<ExpensesModel>> _expenses = SQLiteHelper.instance.getExpenses("");
+  Future<List<ExpensesModel>> _expenses = SQLiteHelper.instance.getExpenses(0);
 
   DateTime _date = DateTime.now();
 
@@ -42,13 +45,13 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
     _newLimitTextController = TextEditingController();
     _newExpenseValueController = TextEditingController();
-    _databaseHelper.getUserByEmail('ferpinoti@gmail.com').then((value) {
+    _databaseHelper.getUserByEmail(widget.data).then((value) {
       if (value.isEmpty) {
         Navigator.of(context).pushNamed('/login');
       } else {
         setState(() {
           currentUser = value.first;
-          _expenses = _databaseHelper.getExpenses(currentUser.email);
+          _expenses = _databaseHelper.getExpenses(currentUser.id);
         });
       }
     });
@@ -169,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
           .then((value) {
         if (value) {
           setState(() {
-            _expenses = SQLiteHelper.instance.getExpenses(currentUser.email);
+            _expenses = SQLiteHelper.instance.getExpenses(currentUser.id);
           });
           Navigator.of(context).pop();
           EMUtils.mostrarSnackbar(
@@ -252,7 +255,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 maxlimit: newLimit,
                 verificationCode: currentUser.verificationCode,
                 verified: currentUser.verified);
-            _expenses = SQLiteHelper.instance.getExpenses(currentUser.email);
+            _expenses = SQLiteHelper.instance.getExpenses(currentUser.id);
           });
           Navigator.of(context).pop();
           EMUtils.mostrarSnackbar(
@@ -353,7 +356,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 onPressed: () {
                                   setState(() {
                                     _expenses = SQLiteHelper.instance
-                                        .getExpenses(currentUser.email);
+                                        .getExpenses(currentUser.id);
                                   });
                                 },
                                 child: Text(
@@ -381,10 +384,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         var expense = snapshot.data![i];
                         if (!periodos.contains(expense.period)) {
                           periodos.add(expense.period);
-                          _expansionPanelOpen.add(true);
+                          if (!_periodExpansionOpen.keys
+                              .contains(expense.period)) {
+                            _periodExpansionOpen[expense.period] = false;
+                          }
+                          _expansionPanelOpen.add(
+                              _periodExpansionOpen[expense.period] ?? false);
+                          _periodExpansionOpenCurrent[
+                              _expansionPanelOpen.length - 1] = expense.period;
                           _expansionPanelsChild.add([]);
-                          _expansionPanelsChild.last
-                              .add(buildExpenseContainer(expense));
                           _expansionPanels.add(
                             ExpansionPanel(
                                 canTapOnHeader: true,
@@ -420,6 +428,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         children: _expansionPanels,
                         expansionCallback: (i, isOpen) => setState(() {
                           _expansionPanelOpen[i] = !isOpen;
+                          _periodExpansionOpen[
+                              _periodExpansionOpenCurrent[i] ?? ""] = !isOpen;
                         }),
                       );
                     },

@@ -10,7 +10,7 @@ import '../screens/login.dart';
 class RoutesConroller {
   static Route<dynamic> generateRoute(RouteSettings settings) {
     // Se precisar passar args depois
-    // final args = settings.arguments;
+    final args = settings.arguments;
 
     switch (settings.name) {
       // case '/':
@@ -24,7 +24,10 @@ class RoutesConroller {
       case '/login':
         return MaterialPageRoute(builder: (_) => const LoginScreen());
       case '/home':
-        return MaterialPageRoute(builder: (_) => const HomeScreen());
+        if (args is String) {
+          return MaterialPageRoute(builder: (_) => HomeScreen(data: args));
+        }
+        return _errorRoute();
       case '/forgotPassword':
         return MaterialPageRoute(builder: (_) => const ForgotPasswordScreen());
       case '/createAccount':

@@ -170,10 +170,10 @@ class SQLiteHelper {
     }
   }
 
-  Future<List<ExpensesModel>> getExpenses(String email) async {
+  Future<List<ExpensesModel>> getExpenses(int userId) async {
     Database db = await instance.database;
-    var expenses =
-        await db.rawQuery('SELECT * FROM TbExpenses ORDER BY date DESC');
+    var expenses = await db.rawQuery(
+        'SELECT * FROM TbExpenses WHERE userId=? ORDER BY date DESC', [userId]);
     List<ExpensesModel> expensesList = expenses.isNotEmpty
         ? expenses.map((c) => ExpensesModel.fromMap(c)).toList()
         : [];

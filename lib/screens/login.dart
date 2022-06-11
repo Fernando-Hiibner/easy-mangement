@@ -185,7 +185,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         if (validacao == "S") {
                           bool loginValido = await fazerLogin();
                           if (loginValido) {
-                            Navigator.of(context).pushNamed('/home');
+                            Navigator.of(context).pushNamed('/home',
+                                arguments: _userController.text);
                           } else {
                             EMUtils.mostrarSnackbar(
                                 context,
